@@ -1282,8 +1282,10 @@ PING_NODE_CM="${cfg.pingCm}"
 
 while true; do
   if [ \\$((LOOP_COUNT % 60)) -eq 0 ]; then
-    curl -s -4 -m 3 https://cloudflare.com/cdn-cgi/trace 2>/dev/null | grep -q "ip=" && IPV4="1" || IPV4="0"
-    curl -s -6 -m 3 https://cloudflare.com/cdn-cgi/trace 2>/dev/null | grep -q "ip=" && IPV6="1" || IPV6="0"
+    IPV4=\\$(curl -s -4 -m 3 https://cloudflare.com/cdn-cgi/trace 2>/dev/null | grep '^ip=' | cut -d'=' -f2)
+    [ -z "\\$IPV4" ] && IPV4="0"
+    IPV6=\\$(curl -s -6 -m 3 https://cloudflare.com/cdn-cgi/trace 2>/dev/null | grep '^ip=' | cut -d'=' -f2)
+    [ -z "\\$IPV6" ] && IPV6="0"
   fi
   
   if [ \\$((LOOP_COUNT % 6)) -eq 0 ]; then
@@ -1579,7 +1581,7 @@ rm -f /tmp/cf_install.sh
         ).run();
 
         // IP 变更检测与 Telegram 推送 ('0' 或空值视为无效 IP，首次上报不告警)
-        const validIp = (v) => (!v || v === '0') ? '' : v;
+        const validIp = (v) => (!v || v === '0' || v === '1') ? '' : v;
         const oldV4 = validIp(serverExists.ip_v4), newV4 = validIp(metrics.ip_v4);
         const oldV6 = validIp(serverExists.ip_v6), newV6 = validIp(metrics.ip_v6);
         const v4Changed = oldV4 && newV4 && oldV4 !== newV4;

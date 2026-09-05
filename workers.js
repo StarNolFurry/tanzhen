@@ -631,8 +631,8 @@ export default {
           const isOnline = (now - s.last_updated) < offlineThresMs;
           const status = isOnline ? '<span style="color:green; font-weight:bold;">在线</span>' : '<span style="color:red; font-weight:bold;">离线</span>';
           const hiddenBadge = s.is_hidden === 'true' ? '<span style="background:#64748b; color:white; padding:2px 6px; border-radius:4px; font-size:12px; margin-left:5px;">已隐藏</span>' : '';
-          const ipV4 = (!s.ip_v4 || s.ip_v4 === '0') ? '<span style="color:#94a3b8;">—</span>' : s.ip_v4;
-          const ipV6 = (!s.ip_v6 || s.ip_v6 === '0') ? '' : s.ip_v6;
+          const ipV4 = (!s.ip_v4 || s.ip_v4 === '0' || s.ip_v4 === '1') ? '<span style="color:#94a3b8;">—</span>' : s.ip_v4;
+          const ipV6 = (!s.ip_v6 || s.ip_v6 === '0' || s.ip_v6 === '1') ? '' : s.ip_v6;
 
           const cmds = getCmds(s);
           const cmd = cmds.cmd; const unCmd = cmds.unCmd; const osType = cmds.osType;
@@ -1117,7 +1117,8 @@ function Get-HttpPing {
 
 while ($true) {
     if ($LOOP_COUNT % 60 -eq 0) {
-        try { $ipv4_req = (Invoke-RestMethod -Uri "https://cloudflare.com/cdn-cgi/trace" -UseBasicParsing -TimeoutSec 3); if ($ipv4_req -match "ip=") { $IPV4 = "1" } else { $IPV4 = "0" } } catch { $IPV4 = "0" }
+        try { $ipv4_req = (Invoke-RestMethod -Uri "https://cloudflare.com/cdn-cgi/trace" -UseBasicParsing -TimeoutSec 3); if ($ipv4_req -match "ip=([0-9a-fA-F:.]+)") { $IPV4 = $Matches[1] } else { $IPV4 = "0" } } catch { $IPV4 = "0" }
+        try { $ipv6_raw = ((& curl.exe -s -6 -m 3 "https://cloudflare.com/cdn-cgi/trace" 2>$null) -join " "); if ($ipv6_raw -match "ip=([0-9a-fA-F:.]+)") { $IPV6 = $Matches[1] } else { $IPV6 = "0" } } catch { $IPV6 = "0" }
     }
     
     if ($LOOP_COUNT % 6 -eq 0) {
@@ -2627,4 +2628,5 @@ rm -f /tmp/cf_install.sh
 
     return new Response('Not Found', { status: 404 });
   }
+};
 };

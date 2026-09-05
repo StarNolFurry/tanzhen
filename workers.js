@@ -1628,6 +1628,19 @@ rm -f /tmp/cf_install.sh
           id
         ).run();
 
+        // IP 变更检测与 Telegram 推送 ('0' 或空值视为无效 IP，首次上报不告警)
+        const validIp = (v) => (!v || v === '0') ? '' : v;
+        const oldV4 = validIp(serverExists.ip_v4), newV4 = validIp(metrics.ip_v4);
+        const oldV6 = validIp(serverExists.ip_v6), newV6 = validIp(metrics.ip_v6);
+        const v4Changed = oldV4 && newV4 && oldV4 !== newV4;
+        const v6Changed = oldV6 && newV6 && oldV6 !== newV6;
+        if (v4Changed || v6Changed) {
+          let ipDetail = '';
+          if (v4Changed) ipDetail += `\n<b>IPv4:</b> ${oldV4} ➜ ${newV4}`;
+          if (v6Changed) ipDetail += `\n<b>IPv6:</b> ${oldV6} ➜ ${newV6}`;
+          ctx.waitUntil(sendTelegram(`🔄 <b>节点 IP 变更通知</b>\n\n<b>节点名称:</b> ${serverExists.name}${ipDetail}\n<b>时间:</b> ${new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}`));
+        }
+
         ctx.waitUntil(checkOfflineNodes());
         
         return new Response(`INTERVAL=${sys.report_interval || '5'}|CT=${sys.ping_node_ct || 'default'}|CU=${sys.ping_node_cu || 'default'}|CM=${sys.ping_node_cm || 'default'}`, { status: 200 });

@@ -347,6 +347,7 @@ export default {
         const mainMenuKb = {
             inline_keyboard: [
                 [{text: '📋 节点列表与管理', callback_data: 'cb_list_nodes'}],
+                [{text: '📊 服务器状态', callback_data: 'cb_status'}],
                 [{text: '⚙️ 全局设置展示控制', callback_data: 'cb_settings'}],
                 [{text: '🎨 切换前端主题', callback_data: 'cb_theme_menu'}]
             ]

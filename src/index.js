@@ -348,6 +348,28 @@ export default {
                     await tgEdit(chatId, msgId, '📋 <b>选择一个节点进行管理：</b>', kb);
                 }
             }
+            else if (text === 'cb_status') {
+                const { results } = await env.DB.prepare('SELECT * FROM servers').all();
+                if (results.length === 0) {
+                    await tgEdit(chatId, msgId, '暂无节点。请发送 <code>/add 节点名 debian</code> 来添加。', {inline_keyboard: [[{text: '🔙 返回主菜单', callback_data: 'cb_menu'}]]});
+                } else {
+                    const now = Date.now();
+                    const offlineThresMs = parseInt(sys.offline_threshold || '30') * 1000;
+                    let online = 0, offline = 0, statusLines = '';
+                    for (const s of results) {
+                        const isOnline = (now - s.last_updated) < offlineThresMs;
+                        if (isOnline) {
+                            online++;
+                            statusLines += `\n🟢 <b>${s.name}</b>\n     CPU: ${s.cpu || '0'}% | 内存: ${s.ram || '0'}% | ↓${formatBytes(s.net_in_speed)}/s ↑${formatBytes(s.net_out_speed)}/s`;
+                        } else {
+                            offline++;
+                            statusLines += `\n🔴 <b>${s.name}</b> (离线)`;
+                        }
+                    }
+                    const statusText = `📊 <b>服务器状态总览</b>\n\n🟢 在线: ${online} | 🔴 离线: ${offline}\n${statusLines}`;
+                    await tgEdit(chatId, msgId, statusText.substring(0, 4000), {inline_keyboard: [[{text: '🔙 返回主菜单', callback_data: 'cb_menu'}]]});
+                }
+            }
             else if (text.startsWith('cb_node_')) {
                 const id = text.split('_')[2];
                 const s = await env.DB.prepare('SELECT * FROM servers WHERE id = ?').bind(id).first();

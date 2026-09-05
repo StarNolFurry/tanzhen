@@ -47,7 +47,7 @@ export default {
         const checkNodes = await env.DB.prepare("SELECT value FROM settings WHERE key = 'cached_nodes_data'").first();
         if (!checkNodes) {
            try {
-               const res = await fetch('https://raw.githubusercontent.com/a63414262/CF-Server-Monitor-Pro/refs/heads/main/nodes.json');
+               const res = await fetch('https://raw.githubusercontent.com/StarNolFurry/tanzhen/refs/heads/main/nodes.json');
                if (res.ok) {
                    const dataText = await res.text();
                    await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('cached_nodes_data', ?)").bind(dataText).run();
@@ -182,8 +182,7 @@ export default {
             <span style="margin-right: 15px;">👁️ 历史总访问：<b style="color: #3b82f6;">${sys.visits_total || 0}</b> 次</span>
             <span>🔥 今日访问：<b style="color: #10b981;">${sys.visits_today || 0}</b> 次</span>
         </div>
-        Powered by <a href="https://github.com/a63414262/CF-Server-Monitor-Pro" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 600;">CF-Server-Monitor-Pro</a> | 
-        <a href="https://www.youtube.com/@%E7%A7%91%E6%8A%80KKK" target="_blank" style="color: #ef4444; text-decoration: none; font-weight: 600;">▶️ 小K分享频道</a>
+        Powered by <a href="https://github.com/StarNolFurry/CF-Server-Monitor-Pro" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 600;">CF-Server-Monitor-Pro</a> | 
       </div>
     `;
 
@@ -1575,6 +1574,19 @@ rm -f /tmp/cf_install.sh
           monthly_rx.toString(), monthly_tx.toString(), last_rx.toString(), last_tx.toString(), reset_month, historyStr, metrics.virt || '',
           id
         ).run();
+
+        // IP 变更检测与 Telegram 推送 ('0' 或空值视为无效 IP，首次上报不告警)
+        const validIp = (v) => (!v || v === '0') ? '' : v;
+        const oldV4 = validIp(serverExists.ip_v4), newV4 = validIp(metrics.ip_v4);
+        const oldV6 = validIp(serverExists.ip_v6), newV6 = validIp(metrics.ip_v6);
+        const v4Changed = oldV4 && newV4 && oldV4 !== newV4;
+        const v6Changed = oldV6 && newV6 && oldV6 !== newV6;
+        if (v4Changed || v6Changed) {
+          let ipDetail = '';
+          if (v4Changed) ipDetail += `\n<b>IPv4:</b> ${oldV4} ➜ ${newV4}`;
+          if (v6Changed) ipDetail += `\n<b>IPv6:</b> ${oldV6} ➜ ${newV6}`;
+          ctx.waitUntil(sendTelegram(`🔄 <b>节点 IP 变更通知</b>\n\n<b>节点名称:</b> ${serverExists.name}${ipDetail}\n<b>时间:</b> ${new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'})}`));
+        }
 
         ctx.waitUntil(checkOfflineNodes());
         

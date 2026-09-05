@@ -584,7 +584,9 @@ export default {
           const isOnline = (now - s.last_updated) < offlineThresMs;
           const status = isOnline ? '<span style="color:green; font-weight:bold;">在线</span>' : '<span style="color:red; font-weight:bold;">离线</span>';
           const hiddenBadge = s.is_hidden === 'true' ? '<span style="background:#64748b; color:white; padding:2px 6px; border-radius:4px; font-size:12px; margin-left:5px;">已隐藏</span>' : '';
-          
+          const ipV4 = (!s.ip_v4 || s.ip_v4 === '0') ? '<span style="color:#94a3b8;">—</span>' : s.ip_v4;
+          const ipV6 = (!s.ip_v6 || s.ip_v6 === '0') ? '' : s.ip_v6;
+
           const cmds = getCmds(s);
           const cmd = cmds.cmd; const unCmd = cmds.unCmd; const osType = cmds.osType;
           
@@ -594,6 +596,7 @@ export default {
               <td>${s.server_group || '默认分组'}</td>
               <td><span style="background:#e2e8f0; color:#475569; padding:2px 6px; border-radius:4px; font-size:12px;">${osType}</span></td>
               <td>${status}</td>
+              <td style="font-size:12px; word-break:break-all; max-width:180px;">${ipV4}${ipV6 ? '<br>' + ipV6 : ''}</td>
               <td>
                 <div style="display:flex; flex-direction:column; gap:6px;">
                   <div style="display:flex; align-items:center; gap:5px;">
@@ -786,8 +789,8 @@ export default {
             <a href="/" style="margin-left: auto; color: #3b82f6; text-decoration: none; font-weight:bold;">👉 前往大盘预览</a>
           </div>
           <table>
-            <tr><th>节点名称</th><th>分组</th><th>系统环境</th><th>在线状态</th><th>操作 (复制命令并在 VPS 执行)</th></tr>
-            ${trs || '<tr><td colspan="5" style="text-align:center; padding: 30px; color:#666;">暂无服务器，请在上方添加</td></tr>'}
+            <tr><th>节点名称</th><th>分组</th><th>系统环境</th><th>在线状态</th><th>IP地址</th><th>操作 (复制命令并在 VPS 执行)</th></tr>
+            ${trs || '<tr><td colspan="6" style="text-align:center; padding: 30px; color:#666;">暂无服务器，请在上方添加</td></tr>'}
           </table>
         </div>
 

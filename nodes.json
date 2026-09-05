@@ -108,6 +108,12 @@
       "name": "18. Komari Emerald (Cyber Earth)",
       "is_dark": true,
       "css": "body.theme18 { background: url('https://w.wallhaven.cc/zj/9d/9d8g8w.jpg') no-repeat center center fixed; background-size: cover; color: #fff; } body.theme18::before { content: ''; position: fixed; inset: 0; background: linear-gradient(135deg, rgba(0, 200, 83, 0.1), rgba(0, 0, 0, 0.8)); z-index: -1; } .theme18 .global-stats { background: rgba(0,0,0,0.4) !important; backdrop-filter: blur(10px); border-radius: 12px !important; border: 1px solid rgba(0, 200, 83, 0.3) !important; } .theme18 .g-label { color: #00c853 !important; } .theme18 .g-val { color: #fff !important; } .theme18 .vps-card { background: rgba(0, 0, 0, 0.6) !important; backdrop-filter: blur(8px); border-radius: 12px !important; border: 1px solid rgba(0, 200, 83, 0.2) !important; padding: 20px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; } .theme18 .vps-card:hover { border-color: rgba(0, 200, 83, 0.6) !important; } .theme18 .card-title { color: #00c853 !important; font-weight: bold; border-bottom: 1px solid rgba(0, 200, 83, 0.2); padding-bottom: 10px; margin-bottom: 15px; } .theme18 .stat-bar-full { height: 6px; background: #222; border-radius: 3px; } .theme18 .stat-bar-full > div { background: #00c853 !important; border-radius: 3px; } .theme18 .group-header { color: #00c853 !important; border-left: 4px solid #00c853; }"
+    },
+    {
+      "id": "theme19",
+      "name": "19. 紧凑资源 大字网速 (Compact Stats & Big Speed)",
+      "is_dark": false,
+      "css": "/* 基于默认主题：缩小 CPU/内存/存储 模块，放大实时上下行网速 */ .theme19 .stat-group { margin-bottom: 4px; } .theme19 .stat-header { font-size: 10px; font-weight: 500; margin-bottom: 2px; } .theme19 .stat-bar-full { height: 4px; border-radius: 2px; } .theme19 .stat-subtext { font-size: 9px; margin-top: 2px; } .theme19 .card-right > div:last-child { margin-top: 10px; } .theme19 .card-right > div:last-child > div > span:first-child { font-size: 15px; font-weight: 700; } .theme19 .card-right > div:last-child .speed-anim { font-size: 20px; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }"
     }
   ],
   "ct": [

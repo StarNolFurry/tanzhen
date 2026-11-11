@@ -2616,8 +2616,8 @@ rm -f /tmp/cf_install.sh
               ring.userData = { isRing: true, base: base, t: Math.random() * Math.PI * 2 };
               markersGroup.add(ring);
 
-              base.userData.label = \`\${count}\`;
-              ring.userData.label = \`\${count}\`;
+              base.userData.label = count + '';
+              ring.userData.label = count + '';
             }
 
             // 脉冲动画

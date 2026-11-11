@@ -58,6 +58,15 @@ export default {
       } catch (e) {}
     }
 
+    const formatSpeedMbps = (bytesPerSec) => {
+      const b = parseFloat(bytesPerSec);
+      if (isNaN(b) || b <= 0) return '0 Mbps';
+      const mbps = b * 8 / 1000000;
+      if (mbps >= 1000) return (mbps / 1000).toFixed(2) + ' Gbps';
+      if (mbps >= 1) return mbps.toFixed(2) + ' Mbps';
+      return (mbps * 1000).toFixed(1) + ' Kbps';
+    };
+
     const formatBytes = (bytes) => {
       const b = parseInt(bytes);
       if (isNaN(b) || b === 0) return '0 B';
@@ -219,7 +228,10 @@ export default {
       .filter-tag { display: inline-flex; align-items: center; gap: 5px; background: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #475569; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid transparent; cursor:pointer; transition: all 0.2s;}
       .filter-tag:hover { background: #f1f5f9; }
       .filter-tag.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-      #map-container { width: 100%; height: 500px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid #e5e7eb; background-color: #b1c2d4; background-image: linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px); background-size: 20px 20px; z-index: 1; }
+      #map-container { width: 100%; height: 600px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid #e5e7eb; background: radial-gradient(circle at 50% 40%, #0c1929 0%, #000 80%); z-index: 1; position: relative; }
+      #map-container canvas { display: block; width: 100% !important; height: 100% !important; }
+      #map-container .globe-stars { position: absolute; inset: 0; background-image: radial-gradient(1px 1px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 40px 70px, #fff, transparent), radial-gradient(1px 1px at 50px 160px, #fff, transparent), radial-gradient(2px 2px at 90px 40px, #fff, transparent), radial-gradient(1px 1px at 130px 80px, #fff, transparent), radial-gradient(1px 1px at 160px 120px, #fff, transparent); background-repeat: repeat; background-size: 200px 200px; opacity: 0.6; pointer-events: none; z-index: 0; }
+      .globe-label { position: absolute; background: rgba(16, 185, 129, 0.9); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; pointer-events: none; transform: translate(-50%, -50%); white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: opacity 0.3s; z-index: 10; }
       .custom-map-badge div { background-color: #10b981; color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
       .view-panel { display: none; } .view-panel.active { display: block; animation: fadeIn 0.3s ease; }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -236,10 +248,9 @@ export default {
 
       .global-stats { display: flex; flex-direction: column; gap: 15px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 30px; text-align: center; box-sizing: border-box; width: 100%; }
       .stats-row { display: flex; justify-content: center; width: 100%; align-items: center; }
-      .stats-row.bottom-row { border-top: 1px dashed rgba(150,150,150,0.2); padding-top: 15px; }
       .stats-row .g-item { flex: 1; border-right: 1px dashed rgba(150,150,150,0.2); min-width: 0; box-sizing: border-box; position: relative; padding: 0 10px; }
       .stats-row .g-item:last-child { border-right: none; }
-      @media (max-width: 768px) { .stats-row { flex-direction: column; gap: 15px; } .stats-row.bottom-row { border-top: none; padding-top: 0; } .stats-row .g-item { border-right: none !important; border-bottom: 1px dashed rgba(150,150,150,0.2); padding-bottom: 15px; } .stats-row .g-item:last-child { border-bottom: none; padding-bottom: 0; } }
+      @media (max-width: 768px) { .stats-row { flex-direction: column; gap: 15px; } .stats-row .g-item { border-right: none !important; border-bottom: 1px dashed rgba(150,150,150,0.2); padding-bottom: 15px; } .stats-row .g-item:last-child { border-bottom: none; padding-bottom: 0; } }
 
       ${themeOverrides}
     `;
@@ -360,7 +371,7 @@ export default {
                         const isOnline = (now - s.last_updated) < offlineThresMs;
                         if (isOnline) {
                             online++;
-                            statusLines += `\n🟢 <b>${s.name}</b>\n     CPU: ${s.cpu || '0'}% | 内存: ${s.ram || '0'}% | ↓${formatBytes(s.net_in_speed)}/s ↑${formatBytes(s.net_out_speed)}/s`;
+                            statusLines += `\n🟢 <b>${s.name}</b> · CPU ${s.cpu || '0'}% · 内存 ${s.ram || '0'}% · ↓${formatSpeedMbps(s.net_in_speed)} ↑${formatSpeedMbps(s.net_out_speed)}`;
                         } else {
                             offline++;
                             statusLines += `\n🔴 <b>${s.name}</b> (离线)`;
@@ -1798,7 +1809,7 @@ rm -f /tmp/cf_install.sh
 
               <div class="chart-card" style="padding: 20px; border-radius: 12px; position: relative;">
                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                   <span class="card-title" style="font-weight:bold;">网络速度</span><span class="stat-val" style="font-weight:bold;"><span style="color:#10b981;">↓</span> <span id="txt-net-in">0 B/s</span> | <span style="color:#3b82f6;">↑</span> <span id="txt-net-out">0 B/s</span></span>
+                   <span class="card-title" style="font-weight:bold;">网络速度</span><span class="stat-val" style="font-weight:bold;"><span style="color:#10b981;">↓</span> <span id="txt-net-in">0 Mbps</span> | <span style="color:#3b82f6;">↑</span> <span id="txt-net-out">0 Mbps</span></span>
                  </div>
                  <div style="height: 180px;"><canvas id="chart-net"></canvas></div>
               </div>
@@ -1835,6 +1846,15 @@ rm -f /tmp/cf_install.sh
                return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             };
 
+            const formatSpeedMbpsJs = (bytesPerSec) => {
+              const b = parseFloat(bytesPerSec);
+              if (isNaN(b) || b <= 0) return '0 Mbps';
+              const mbps = b * 8 / 1000000;
+              if (mbps >= 1000) return (mbps / 1000).toFixed(2) + ' Gbps';
+              if (mbps >= 1) return mbps.toFixed(2) + ' Mbps';
+              return (mbps * 1000).toFixed(1) + ' Kbps';
+            };
+
             function initChart(ctxId, label1, label2, color1, color2, isSpeed = false) {
               const ctx = document.getElementById(ctxId).getContext('2d');
               const isDark = document.body.className.includes('theme2') || document.body.className.includes('theme5') || document.body.className.includes('theme4') || document.body.className.includes('theme8') || document.body.className.includes('theme6');
@@ -1859,11 +1879,11 @@ rm -f /tmp/cf_install.sh
                   responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, interaction: { mode: 'index', intersect: false },
                   plugins: {
                     legend: { display: false },
-                    tooltip: { callbacks: { label: function(context) { let l = context.dataset.label || ''; if (l) l += ': '; if (context.parsed.y !== null) l += isSpeed ? formatBytesJs(context.parsed.y) + '/s' : context.parsed.y; return l; } } }
+                    tooltip: { callbacks: { label: function(context) { let l = context.dataset.label || ''; if (l) l += ': '; if (context.parsed.y !== null) l += isSpeed ? formatSpeedMbpsJs(context.parsed.y) : context.parsed.y; return l; } } }
                   },
                   scales: {
                     x: { grid: { display: false, drawBorder: false }, ticks: { color: fontColor, maxTicksLimit: 6 } },
-                    y: { grid: { color: gridColor, drawBorder: false }, ticks: { color: fontColor, callback: function(value) { return isSpeed ? formatBytesJs(value) : value; } }, beginAtZero: true }
+                    y: { grid: { color: gridColor, drawBorder: false }, ticks: { color: fontColor, callback: function(value) { return isSpeed ? formatSpeedMbpsJs(value) : value; } }, beginAtZero: true }
                   }
                 }
               });
@@ -1932,8 +1952,8 @@ rm -f /tmp/cf_install.sh
                   document.getElementById('txt-disk-detail').innerText = formatBytesJs(data.disk_used * 1048576) + ' / ' + formatBytesJs(data.disk_total * 1048576);
                   
                   document.getElementById('txt-proc').innerText = data.processes;
-                  document.getElementById('txt-net-in').innerText = formatBytesJs(data.net_in_speed) + '/s';
-                  document.getElementById('txt-net-out').innerText = formatBytesJs(data.net_out_speed) + '/s';
+                  document.getElementById('txt-net-in').innerText = formatSpeedMbpsJs(data.net_in_speed);
+                  document.getElementById('txt-net-out').innerText = formatSpeedMbpsJs(data.net_out_speed);
                   document.getElementById('txt-tcp').innerText = data.tcp_conn;
                   document.getElementById('txt-udp').innerText = data.udp_conn;
 
@@ -2094,8 +2114,8 @@ rm -f /tmp/cf_install.sh
                   </div>
                   
                   <div style="display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 4px; white-space: nowrap; gap: 8px;">
-                    <div style="overflow: hidden; text-overflow: ellipsis;"><span style="color:#10b981">↓</span> <span class="speed-anim" data-id="c-in-${server.id}" data-val="${netInSpeedRaw}">0 B/s</span></div>
-                    <div style="overflow: hidden; text-overflow: ellipsis;"><span style="color:#3b82f6">↑</span> <span class="speed-anim" data-id="c-out-${server.id}" data-val="${netOutSpeedRaw}">0 B/s</span></div>
+                    <div style="overflow: hidden; text-overflow: ellipsis;"><span style="color:#10b981">↓</span> <span class="speed-anim" data-id="c-in-${server.id}" data-val="${netInSpeedRaw}">0 Mbps</span></div>
+                    <div style="overflow: hidden; text-overflow: ellipsis;"><span style="color:#3b82f6">↑</span> <span class="speed-anim" data-id="c-out-${server.id}" data-val="${netOutSpeedRaw}">0 Mbps</span></div>
                   </div>
                 </div>
               </a>
@@ -2126,8 +2146,8 @@ rm -f /tmp/cf_install.sh
                   </div>
                 </td>
                 <td style="color:#64748b; font-size:12px; white-space: nowrap;">${rx_val_str} | ${tx_val_str}</td>
-                <td style="white-space: nowrap;"><span class="speed-anim" data-id="t-in-${server.id}" data-val="${netInSpeedRaw}">0 B/s</span></td>
-                <td style="white-space: nowrap;"><span class="speed-anim" data-id="t-out-${server.id}" data-val="${netOutSpeedRaw}">0 B/s</span></td>
+                <td style="white-space: nowrap;"><span class="speed-anim" data-id="t-in-${server.id}" data-val="${netInSpeedRaw}">0 Mbps</span></td>
+                <td style="white-space: nowrap;"><span class="speed-anim" data-id="t-out-${server.id}" data-val="${netOutSpeedRaw}">0 Mbps</span></td>
                 <td style="color:#64748b; font-size:12px; white-space: nowrap;">${Math.round((now - server.last_updated)/1000)} 秒前</td>
               </tr>
             `;
@@ -2142,7 +2162,6 @@ rm -f /tmp/cf_install.sh
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${sys.site_title}</title>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
         <script id="map-data" type="application/json">${JSON.stringify(countryStats)}</script>
         ${sys.custom_head || ''}
         <style>
@@ -2181,7 +2200,6 @@ rm -f /tmp/cf_install.sh
             .stats-row { flex-direction: column; gap: 15px; } 
             .stats-row .g-item { border-right: none !important; border-bottom: 1px dashed rgba(150,150,150,0.2); padding-bottom: 15px; } 
             .stats-row .g-item:last-child { border-bottom: none; padding-bottom: 0; }
-            .stats-row.bottom-row { border-top: none; padding-top: 0; }
           }
           
           ${themeStyles}
@@ -2214,7 +2232,7 @@ rm -f /tmp/cf_install.sh
           </div>
 
           <div class="global-stats" id="ajax-stats">
-            <div class="stats-row top-row">
+            <div class="stats-row">
               <div class="g-item">
                 <div class="g-label">本机服务器总数</div>
                 <div class="g-val">${visibleServersCount} ${rankHtmlServer}</div>
@@ -2225,12 +2243,10 @@ rm -f /tmp/cf_install.sh
                 <div class="g-label">本机可见数字资产 (${sys.asset_currency || '元'})</div>
                 <div class="g-val">${visibleAsset.toFixed(2)} <span style="font-size:16px;color:#888;">总</span> | ${visibleRemAsset.toFixed(2)} <span style="font-size:16px;color:#888;">余</span></div>
               </div>
-            </div>
-            
-            <div class="stats-row bottom-row">
+
               <div class="g-item">
                 <div class="g-label">实时网速 (入 | 出)</div>
-                <div class="g-val"><span style="color:#10b981">↓</span> <span class="speed-anim" data-id="g-in" data-val="${globalSpeedIn}">0 B/s</span> | <span style="color:#3b82f6">↑</span> <span class="speed-anim" data-id="g-out" data-val="${globalSpeedOut}">0 B/s</span></div>
+                <div class="g-val"><span style="color:#10b981">↓</span> <span class="speed-anim" data-id="g-in" data-val="${globalSpeedIn}">0 Mbps</span> | <span style="color:#3b82f6">↑</span> <span class="speed-anim" data-id="g-out" data-val="${globalSpeedOut}">0 Mbps</span></div>
               </div>
 
               <div class="g-item">
@@ -2258,7 +2274,7 @@ rm -f /tmp/cf_install.sh
           </div>
 
           <div id="view-map" class="view-panel">
-            <div id="map-container"></div>
+            <div id="map-container"><div class="globe-stars"></div></div>
           </div>
           
           ${sys.enable_popup === 'true' ? `
@@ -2290,8 +2306,220 @@ rm -f /tmp/cf_install.sh
           ${getFooterHtml(sys)}
         </div>
 
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+        <script type="importmap">
+          {
+            "imports": {
+              "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+            }
+          }
+        </script>
         
+        <script type="module">
+          import * as THREE from 'three';
+          import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+          import { geoJson } from 'https://unpkg.com/world-atlas@2/land-110m.json';
+
+          const countryCoords = {
+            'US': [37.09, -95.71], 'CN': [35.86, 104.19], 'JP': [36.20, 138.25], 'HK': [22.31, 114.16], 'SG': [1.35, 103.81], 'KR': [35.90, 127.76], 'DE': [51.16, 10.45], 'GB': [55.37, -3.43], 'NL': [52.13, 5.29], 'FR': [46.22, 2.21], 'CA': [56.13, -106.34], 'AU': [-25.27, 133.77], 'IN': [20.59, 78.96], 'BR': [-14.23, -51.92], 'RU': [61.52, 105.31], 'ZA': [-30.55, 22.93], 'TW': [23.69, 120.96], 'IT': [41.87, 12.56], 'SE': [60.12, 18.64], 'CH': [46.81, 8.22], 'ES': [40.46, -3.74], 'PL': [51.91, 19.14], 'FI': [61.92, 25.74], 'NO': [60.47, 8.46], 'DK': [56.26, 9.50], 'IE': [53.14, -7.69], 'AT': [47.51, 14.55], 'TR': [38.96, 35.24], 'AE': [23.42, 53.84], 'MY': [4.21, 101.97], 'TH': [15.87, 100.99], 'VN': [14.05, 108.27], 'PH': [12.87, 121.77], 'ID': [-0.78, 113.92], 'MO': [22.20, 113.54]
+          };
+
+          let scene, camera, renderer, controls, earth, markersGroup, labelLayer;
+          let globeInitialized = false;
+          let lastGlobeDataStr = '';
+
+          function latLonToVec3(lat, lon, radius) {
+            const phi = (90 - lat) * Math.PI / 180;
+            const theta = (lon + 180) * Math.PI / 180;
+            return new THREE.Vector3(
+              -radius * Math.sin(phi) * Math.cos(theta),
+               radius * Math.cos(phi),
+              -radius * Math.sin(phi) * Math.sin(theta)
+            );
+          }
+
+          async function initGlobe() {
+            if (globeInitialized) return;
+            const container = document.getElementById('map-container');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            const w = container.clientWidth, h = container.clientHeight;
+            camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
+            camera.position.set(0, 0, 4);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.prepend(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 0.5;
+            controls.enablePan = false;
+            controls.minDistance = 2.2;
+            controls.maxDistance = 8;
+
+            // 光照
+            scene.add(new THREE.AmbientLight(0x404060, 1.2));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            dirLight.position.set(5, 3, 5);
+            scene.add(dirLight);
+            const rimLight = new THREE.DirectionalLight(0x64b5f6, 0.6);
+            rimLight.position.set(-5, -2, -5);
+            scene.add(rimLight);
+
+            // 地球
+            earth = new THREE.Mesh(
+              new THREE.SphereGeometry(1.5, 64, 64),
+              new THREE.MeshPhongMaterial({
+                color: 0x1e3a5f,
+                emissive: 0x0a1628,
+                specular: 0x2244aa,
+                shininess: 15,
+                transparent: true,
+                opacity: 0.92
+              })
+            );
+            scene.add(earth);
+
+            // 大气光晕
+            const atmosphere = new THREE.Mesh(
+              new THREE.SphereGeometry(1.55, 64, 64),
+              new THREE.MeshBasicMaterial({
+                color: 0x4da6ff,
+                transparent: true,
+                opacity: 0.12,
+                side: THREE.BackSide
+              })
+            );
+            scene.add(atmosphere);
+
+            // 简化大陆轮廓（用 GeoJSON 绘制细线）
+            try {
+              const worldData = await fetch('https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_land.geojson').then(r => r.json());
+              const landGroup = new THREE.Group();
+              const geoJsonLineMat = new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.6 });
+              const geoJsonFillMat = new THREE.MeshBasicMaterial({ color: 0x0f3a5c, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
+
+              function addRing(coords) {
+                if (!coords || coords.length < 2) return;
+                const pts = coords.map(c => latLonToVec3(c[1], c[0], 1.505));
+                const geom = new THREE.BufferGeometry().setFromPoints(pts);
+                landGroup.add(new THREE.Line(geom, geoJsonLineMat));
+              }
+              function addPolyring(rings) { rings.forEach(addRing); }
+
+              worldData.features.forEach(f => {
+                if (f.geometry.type === 'Polygon') addPolyring(f.geometry.coordinates);
+                else if (f.geometry.type === 'MultiPolygon') f.geometry.coordinates.forEach(addPolyring);
+              });
+              earth.add(landGroup);
+            } catch (e) {}
+
+            markersGroup = new THREE.Group();
+            earth.add(markersGroup);
+
+            labelLayer = document.createElement('div');
+            labelLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;';
+            container.appendChild(labelLayer);
+
+            window.addEventListener('resize', () => {
+              const w = container.clientWidth, h = container.clientHeight;
+              camera.aspect = w / h;
+              camera.updateProjectionMatrix();
+              renderer.setSize(w, h);
+            });
+
+            function animate() {
+              requestAnimationFrame(animate);
+              controls.update();
+              if (!controls.isDragging) earth.rotation.y += 0.0015;
+              updateLabels();
+              renderer.render(scene, camera);
+            }
+            animate();
+            globeInitialized = true;
+            window._globeReady = true;
+            drawGlobeMarkers();
+          }
+
+          function updateLabels() {
+            if (!markersGroup) return;
+            labelLayer.innerHTML = '';
+            const children = markersGroup.children;
+            for (let i = 0; i < children.length; i++) {
+              const m = children[i];
+              const v = m.position.clone().applyMatrix4(earth.matrixWorld).project(camera);
+              const x = (v.x * 0.5 + 0.5) * labelLayer.clientWidth;
+              const y = (-v.y * 0.5 + 0.5) * labelLayer.clientHeight;
+              if (v.z > 1) {
+                const label = document.createElement('div');
+                label.className = 'globe-label';
+                label.style.left = x + 'px';
+                label.style.top = y + 'px';
+                label.textContent = m.userData.label || '';
+                labelLayer.appendChild(label);
+              }
+            }
+          }
+
+          function drawGlobeMarkers() {
+            if (!globeInitialized) return;
+            const dataStr = document.getElementById('map-data').textContent;
+            if (dataStr === lastGlobeDataStr) return;
+            lastGlobeDataStr = dataStr;
+
+            const data = JSON.parse(dataStr);
+            markersGroup.clear();
+
+            const markerGeom = new THREE.SphereGeometry(0.035, 16, 16);
+            const lineMat = new THREE.LineBasicMaterial({ color: 0x10b981 });
+
+            for (const [code, count] of Object.entries(data)) {
+              if (!countryCoords[code]) continue;
+              const [lat, lon] = countryCoords[code];
+              const pos = latLonToVec3(lat, lon, 1.52);
+
+              // 底座（发光点）
+              const baseMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+              const base = new THREE.Mesh(markerGeom, baseMat);
+              base.position.copy(pos);
+              markersGroup.add(base);
+
+              // 脉冲环
+              const ringGeom = new THREE.RingGeometry(0.045, 0.055, 32);
+              const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+              const ring = new THREE.Mesh(ringGeom, ringMat);
+              ring.position.copy(pos);
+              ring.lookAt(0, 0, 0);
+              ring.userData = { isRing: true, base: base, t: Math.random() * Math.PI * 2 };
+              markersGroup.add(ring);
+
+              base.userData.label = `\${count}`;
+              ring.userData.label = `\${count}`;
+            }
+
+            // 脉冲动画
+            if (!window._globeRingAnim) {
+              window._globeRingAnim = true;
+              setInterval(() => {
+                if (!markersGroup) return;
+                markersGroup.children.forEach(c => {
+                  if (c.userData.isRing) {
+                    c.userData.t += 0.05;
+                    const s = 1 + Math.sin(c.userData.t) * 0.3;
+                    c.scale.setScalar(s);
+                    c.material.opacity = 0.8 - Math.abs(Math.sin(c.userData.t)) * 0.5;
+                  }
+                });
+              }, 50);
+            }
+          }
+
+          window.initGlobe = initGlobe;
+          window.drawGlobeMarkers = drawGlobeMarkers;
+        </script>
         <script>
           const formatBytesJs = (bytes) => {
             const b = parseInt(bytes);
@@ -2302,6 +2530,15 @@ rm -f /tmp/cf_install.sh
             return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
           };
 
+          const formatSpeedMbpsJs = (bytesPerSec) => {
+            const b = parseFloat(bytesPerSec);
+            if (isNaN(b) || b <= 0) return '0 Mbps';
+            const mbps = b * 8 / 1000000;
+            if (mbps >= 1000) return (mbps / 1000).toFixed(2) + ' Gbps';
+            if (mbps >= 1) return mbps.toFixed(2) + ' Mbps';
+            return (mbps * 1000).toFixed(1) + ' Kbps';
+          };
+
           window.speedCache = {};
           function animateBytes(el, start, end, duration) {
               let startTimestamp = null;
@@ -2310,7 +2547,7 @@ rm -f /tmp/cf_install.sh
                   const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                   const easeProgress = 1 - Math.pow(1 - progress, 3);
                   const currentBytes = start + (end - start) * easeProgress;
-                  el.innerText = formatBytesJs(currentBytes) + '/s';
+                  el.innerText = formatSpeedMbpsJs(currentBytes);
                   if (progress < 1) window.requestAnimationFrame(step);
               };
               window.requestAnimationFrame(step);
@@ -2323,26 +2560,33 @@ rm -f /tmp/cf_install.sh
                   const oldVal = window.speedCache[id] !== undefined ? window.speedCache[id] : 0;
                   window.speedCache[id] = newVal;
                   if (oldVal !== newVal) { animateBytes(el, oldVal, newVal, 1200); } 
-                  else { el.innerText = formatBytesJs(newVal) + '/s'; }
+                  else { el.innerText = formatSpeedMbpsJs(newVal); }
               });
           }
 
-          let mapInitialized = false;
           window.currentFilter = 'all';
 
           function switchView(viewName) {
             document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-' + viewName).classList.add('active');
+            const btnMap = document.getElementById('btn-map');
+            document.getElementById('btn-card').classList.remove('active');
+            document.getElementById('btn-table').classList.remove('active');
+            if (btnMap) btnMap.classList.remove('active');
             
             document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
-            document.getElementById('view-' + viewName).classList.add('active');
             
-            localStorage.setItem('monitor_preferred_view', viewName);
-
             if (viewName === 'map') {
-              if (!mapInitialized) { initMap(); mapInitialized = true; } 
-              else { window.myMap.invalidateSize(); }
+              document.getElementById('view-map').classList.add('active');
+              if (window.initGlobe && !window._globeReady) window.initGlobe();
+              if (btnMap) btnMap.classList.add('active');
+            } else if (viewName === 'table') {
+              document.getElementById('view-table').classList.add('active');
+              document.getElementById('btn-table').classList.add('active');
+            } else {
+              document.getElementById('view-card').classList.add('active');
+              document.getElementById('btn-card').classList.add('active');
             }
+            localStorage.setItem('monitor_preferred_view', viewName);
           }
 
           function setFilter(code) {
@@ -2371,61 +2615,6 @@ rm -f /tmp/cf_install.sh
               });
           }
 
-          let markersLayer; let geoJsonLayer; let worldGeoJson = null; let currentMapDataStr = "";
-
-          const countryCoords = {
-            'US': [37.09, -95.71], 'CN': [35.86, 104.19], 'JP': [36.20, 138.25], 'HK': [22.31, 114.16], 'SG': [1.35, 103.81], 'KR': [35.90, 127.76], 'DE': [51.16, 10.45], 'GB': [55.37, -3.43], 'NL': [52.13, 5.29], 'FR': [46.22, 2.21], 'CA': [56.13, -106.34], 'AU': [-25.27, 133.77], 'IN': [20.59, 78.96], 'BR': [-14.23, -51.92], 'RU': [61.52, 105.31], 'ZA': [-30.55, 22.93], 'TW': [23.69, 120.96], 'IT': [41.87, 12.56], 'SE': [60.12, 18.64], 'CH': [46.81, 8.22], 'ES': [40.46, -3.74], 'PL': [51.91, 19.14], 'FI': [61.92, 25.74], 'NO': [60.47, 8.46], 'DK': [56.26, 9.50], 'IE': [53.14, -7.69], 'AT': [47.51, 14.55], 'TR': [38.96, 35.24], 'AE': [23.42, 53.84], 'MY': [4.21, 101.97], 'TH': [15.87, 100.99], 'VN': [14.05, 108.27], 'PH': [12.87, 121.77], 'ID': [-0.78, 113.92]
-          };
-          const iso2To3 = { "US":"USA","CN":"CHN","JP":"JPN","HK":"HKG","SG":"SGP","KR":"KOR","DE":"DEU","GB":"GBR", "NL":"NLD","FR":"FRA","CA":"CAN","AU":"AUS","IN":"IND","BR":"BRA","RU":"RUS","ZA":"ZAF", "TW":"TWN","IT":"ITA","SE":"SWE","CH":"CHE","ES":"ESP","PL":"POL","FI":"FIN","NO":"NOR", "DK":"DNK","IE":"IRL","AT":"AUT","TR":"TUR","AE":"ARE","MY":"MYS","TH":"THA","VN":"VNM", "PH":"PHL","ID":"IDN" };
-
-          async function initMap() {
-            window.myMap = L.map('map-container', { zoomControl: true, attributionControl: false, minZoom: 1 }).setView([30, 10], 2);
-            try {
-                const res = await fetch('https://cdn.jsdelivr.net/gh/johan/world.geo.json@master/countries.geo.json');
-                worldGeoJson = await res.json();
-                drawMarkers();
-            } catch (e) {}
-          }
-
-          function drawMarkers() {
-            if(!window.myMap || !worldGeoJson) return;
-            const newDataStr = document.getElementById('map-data').textContent;
-            if (currentMapDataStr === newDataStr) return;
-            currentMapDataStr = newDataStr;
-
-            if(geoJsonLayer) window.myMap.removeLayer(geoJsonLayer);
-            if(markersLayer) markersLayer.clearLayers(); else markersLayer = L.layerGroup().addTo(window.myMap);
-
-            const data = JSON.parse(newDataStr);
-            const isDark = document.body.className.includes('theme2') || document.body.className.includes('theme5') || document.body.className.includes('theme4') || document.body.className.includes('theme8') || document.body.className.includes('theme6');
-            const activeIso3 = {}; 
-            for (const code in data) { 
-               if (iso2To3[code]) activeIso3[iso2To3[code]] = true; 
-            }
-            
-            // 核心修复：领土完整性映射。只要命中中国大陆、台湾、香港或澳门任意一处，共同点亮整个中国版图
-            if (activeIso3['CHN'] || activeIso3['TWN'] || activeIso3['HKG'] || activeIso3['MAC']) {
-                activeIso3['CHN'] = true;
-                activeIso3['TWN'] = true;
-                activeIso3['HKG'] = true;
-                activeIso3['MAC'] = true;
-            }
-
-            geoJsonLayer = L.geoJSON(worldGeoJson, {
-                style: function(feature) {
-                    const isActive = activeIso3[feature.id];
-                    return { fillColor: isActive ? '#10b981' : (isDark ? '#2a303c' : '#d5dce2'), weight: 1, opacity: 1, color: isDark ? '#1a202c' : '#ffffff', fillOpacity: 1 };
-                }
-            }).addTo(window.myMap);
-
-            for (const [code, count] of Object.entries(data)) {
-              if(countryCoords[code]) {
-                const icon = L.divIcon({ className: 'custom-map-badge', html: \`<div>\${count}</div>\`, iconSize: [22,22] });
-                L.marker(countryCoords[code], {icon: icon}).addTo(markersLayer);
-              }
-            }
-          }
-
           document.addEventListener('DOMContentLoaded', () => {
              const savedView = localStorage.getItem('monitor_preferred_view') || 'card';
              switchView(savedView); applyFilter(); applySpeedAnimations();
@@ -2448,7 +2637,8 @@ rm -f /tmp/cf_install.sh
               
               
 
-              drawMarkers(); applyFilter(); applySpeedAnimations();
+              if (window.drawGlobeMarkers) window.drawGlobeMarkers();
+              applyFilter(); applySpeedAnimations();
             } catch (e) {}
           }, 4000);
         </script>
